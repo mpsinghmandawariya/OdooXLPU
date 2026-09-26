@@ -4,9 +4,9 @@
   "description": "StockSense Inventory Management API",
   "main": "src/index.js",
   "scripts": {
-    "postinstall": "prisma generate && prisma migrate deploy && node prisma/seed.js",
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js",
+    "prisma:generate": "prisma generate",
+    "dev": "node scripts/init-db.js && nodemon src/index.js",
+    "start": "node scripts/init-db.js && node src/index.js",
     "setup": "prisma generate && prisma migrate deploy && node prisma/seed.js",
     "prisma:studio": "prisma studio",
     "test": "echo \"No tests specified\" && exit 0"
@@ -21,6 +21,7 @@
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^18.0.4",
     "express": "^5.2.1",

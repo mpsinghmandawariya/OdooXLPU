@@ -231,7 +231,6 @@ const verifyOtp = async (req, res, next) => {
       where: { id: resetOtp.id },
       data: {
         attempts: (resetOtp.attempts || 0) + 1,
-        used: true,
       },
     });
 

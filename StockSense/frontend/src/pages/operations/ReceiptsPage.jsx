@@ -1,31 +1,29 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./receipts.css";
+import { getReceipts } from "../../services/receipt.service";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+const STATUS_MAP = {
+  DRAFT: "draft",
+  WAITING: "waiting",
+  READY: "ready",
+  DONE: "done",
+  CANCELED: "canceled",
+};
+
+const STATUS_LABELS = {
+  DRAFT: "Draft",
+  WAITING: "Waiting",
+  READY: "Ready",
+  DONE: "Done",
+  CANCELED: "Canceled",
+};
 
 function StatusBadge({ status }) {
-  const statusMap = {
-    DRAFT: "draft",
-    WAITING: "waiting",
-    READY: "ready",
-    DONE: "done",
-    CANCELED: "canceled",
-  };
-
-  const labels = {
-    DRAFT: "Draft",
-    WAITING: "Waiting",
-    READY: "Ready",
-    DONE: "Done",
-    CANCELED: "Canceled",
-  };
-
   return (
-    <span className={`receipt-status ${statusMap[status] || "draft"}`}>
+    <span className={`receipt-status ${STATUS_MAP[status] || "draft"}`}>
       <span className="status-dot" />
-      {labels[status] || status}
+      {STATUS_LABELS[status] || status}
     </span>
   );
 }
@@ -60,25 +58,13 @@ export default function ReceiptsPage() {
       setLoading(true);
       setError("");
 
-      const params = new URLSearchParams();
-      if (search.trim()) params.set("search", search.trim());
-      if (status !== "ALL") params.set("status", status);
-      params.set("page", String(page));
-      params.set("limit", "10");
+      const params = {};
+      if (search.trim()) params.search = search.trim();
+      if (status !== "ALL") params.status = status;
+      params.page = page;
+      params.limit = 10;
 
-      const token = localStorage.getItem("stocksense_token");
-      const response = await fetch(`${API_URL}/receipts?${params.toString()}`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Unable to load receipts");
-      }
-
-      const result = await response.json();
+      const result = await getReceipts(params);
       setReceipts(result.data || []);
 
       if (result.pagination) {
@@ -88,7 +74,9 @@ export default function ReceiptsPage() {
       console.error(err);
       setReceipts([]);
       setPagination((current) => ({ ...current, total: 0, totalPages: 1 }));
-      setError(err.message || "Unable to load receipts");
+      setError(
+        err?.response?.data?.message || err.message || "Unable to load receipts",
+      );
     } finally {
       setLoading(false);
     }

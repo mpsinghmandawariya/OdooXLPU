@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import "./receipts.css";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
-let csrfToken = "";
+import api from "../../services/api";
+import {
+  cancelReceipt,
+  createReceipt,
+  getNextReceiptReference,
+  getReceiptById,
+  markReceiptReady,
+  validateReceipt,
+} from "../../services/receipt.service";
 
 const money = (value) =>
   new Intl.NumberFormat("en-IN", {
@@ -11,44 +17,6 @@ const money = (value) =>
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(value || 0);
-
-const refreshCsrfToken = async () => {
-  const response = await fetch(`${API_URL}/csrf-token`, {
-    credentials: "include",
-  });
-  const data = await response.json();
-  if (!response.ok || !data?.csrfToken) {
-    throw new Error(data?.message || "Unable to obtain CSRF token");
-  }
-  csrfToken = data.csrfToken;
-};
-
-const authFetch = async (url, options = {}) => {
-  const token = localStorage.getItem("stocksense_token");
-  const method = (options.method || "GET").toUpperCase();
-  if (["POST", "PUT", "PATCH", "DELETE"].includes(method) && !csrfToken) {
-    await refreshCsrfToken();
-  }
-
-  return fetch(url, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
-      ...options.headers,
-    },
-  });
-};
-
-const readResponse = async (response) => {
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data?.message || "Unable to load receipt data");
-  }
-  return data;
-};
 
 const EMPTY_LINE = () => ({
   _key: Date.now() + Math.random(),
@@ -91,11 +59,11 @@ export default function ReceiptFormPage() {
   // ── load reference number ─────────────────────────────
   useEffect(() => {
     if (isEdit) return;
-    authFetch(`${API_URL}/receipts/next-reference`)
-      .then(readResponse)
+    getNextReceiptReference()
       .then((data) => {
-        if (data?.data?.referenceNumber)
+        if (data?.data?.referenceNumber) {
           setReferenceNumber(data.data.referenceNumber);
+        }
       })
       .catch(() => setReferenceNumber("WH/IN/???"));
   }, [isEdit]);
@@ -103,9 +71,9 @@ export default function ReceiptFormPage() {
   // ── load products & warehouses ────────────────────────
   useEffect(() => {
     Promise.all([
-      authFetch(`${API_URL}/products?isActive=true`).then(readResponse),
-      authFetch(`${API_URL}/warehouses?isActive=true`).then(readResponse),
-      authFetch(`${API_URL}/locations?limit=100`).then(readResponse),
+      api.get("/products?isActive=true").then((r) => r.data),
+      api.get("/warehouses?isActive=true").then((r) => r.data),
+      api.get("/locations?limit=100").then((r) => r.data),
     ])
       .then(([prodData, whData, locationData]) => {
         setProducts(prodData?.data || []);
@@ -131,31 +99,40 @@ export default function ReceiptFormPage() {
           });
         }
       })
-      .catch((requestError) => setError(requestError.message));
+      .catch((requestError) => {
+        setError(
+          requestError?.response?.data?.message ||
+            requestError.message ||
+            "Failed to load products and warehouses",
+        );
+      });
   }, [isEdit]);
 
   // ── load locations when warehouse changes ─────────────
   useEffect(() => {
     if (!selectedWarehouseId) return;
     if (locationsByWarehouse[selectedWarehouseId]) return;
-    authFetch(
-      `${API_URL}/locations?warehouseId=${selectedWarehouseId}&limit=100`,
-    )
-      .then(readResponse)
-      .then((data) => {
+    api
+      .get(`/locations?warehouseId=${selectedWarehouseId}&limit=100`)
+      .then((r) => {
         setLocationsByWarehouse((prev) => ({
           ...prev,
-          [selectedWarehouseId]: data?.data || [],
+          [selectedWarehouseId]: r.data?.data || [],
         }));
       })
-      .catch((requestError) => setError(requestError.message));
-  }, [selectedWarehouseId]);
+      .catch((requestError) => {
+        setError(
+          requestError?.response?.data?.message ||
+            requestError.message ||
+            "Failed to load locations",
+        );
+      });
+  }, [selectedWarehouseId, locationsByWarehouse]);
 
   // ── load existing receipt when editing ────────────────
   useEffect(() => {
     if (!isEdit) return;
-    authFetch(`${API_URL}/receipts/${id}`)
-      .then(readResponse)
+    getReceiptById(id)
       .then((data) => {
         const r = data?.data;
         if (!r) return;
@@ -175,7 +152,13 @@ export default function ReceiptFormPage() {
           },
         ]);
       })
-      .catch(() => setError("Failed to load receipt"))
+      .catch((err) => {
+        setError(
+          err?.response?.data?.message ||
+            err.message ||
+            "Failed to load receipt",
+        );
+      })
       .finally(() => setLoading(false));
   }, [id, isEdit]);
 
@@ -236,27 +219,21 @@ export default function ReceiptFormPage() {
     setError("");
     setSuccess("");
     try {
-      // For multi-line: create one operation per line (current schema is 1 product per operation)
       const results = await Promise.all(
-        lines.map((l) =>
-          authFetch(`${API_URL}/receipts`, {
-            method: "POST",
-            body: JSON.stringify({
-              productId: l.productId,
-              locationId: l.locationId,
-              warehouseId: selectedWarehouseId || undefined,
-              quantity: Number(l.quantity),
-              unitCost: Number(l.unitCost) || undefined,
-              contact: contact.trim(),
-              referenceNumber:
-                lines.indexOf(l) === 0
-                  ? referenceNumber || undefined
-                  : undefined,
-              scheduledDate: scheduledDate || undefined,
-              notes: notes || undefined,
-              status: "DRAFT",
-            }),
-          }).then((r) => r.json()),
+        lines.map((l, index) =>
+          createReceipt({
+            productId: l.productId,
+            locationId: l.locationId,
+            warehouseId: selectedWarehouseId || undefined,
+            quantity: Number(l.quantity),
+            unitCost: Number(l.unitCost) || undefined,
+            contact: contact.trim(),
+            referenceNumber:
+              index === 0 ? referenceNumber || undefined : undefined,
+            scheduledDate: scheduledDate || undefined,
+            notes: notes || undefined,
+            status: "DRAFT",
+          }),
         ),
       );
 
@@ -265,14 +242,15 @@ export default function ReceiptFormPage() {
 
       setSuccess("Receipt saved as draft");
       setReceiptStatus("DRAFT");
-      // Navigate to the first created receipt
       if (!isEdit && results[0]?.data?.id) {
         navigate(`/operations/receipts/${results[0].data.id}`, {
           replace: true,
         });
       }
     } catch (e) {
-      setError(e.message || "Failed to save receipt");
+      setError(
+        e.response?.data?.message || e.message || "Failed to save receipt",
+      );
     } finally {
       setSaving(false);
     }
@@ -296,13 +274,15 @@ export default function ReceiptFormPage() {
     setValidating(true);
     setError("");
     try {
-      await authFetch(`${API_URL}/receipts/${id}/ready`, {
-        method: "POST",
-      }).then(readResponse);
+      await markReceiptReady(id);
       setReceiptStatus("READY");
       setSuccess("Receipt marked ready. You can now validate it.");
     } catch (e) {
-      setError(e.message || "Unable to mark receipt ready");
+      setError(
+        e.response?.data?.message ||
+          e.message ||
+          "Unable to mark receipt ready",
+      );
     } finally {
       setValidating(false);
     }
@@ -317,13 +297,13 @@ export default function ReceiptFormPage() {
     setValidating(true);
     setError("");
     try {
-      await authFetch(`${API_URL}/receipts/${id}/cancel`, {
-        method: "POST",
-      }).then(readResponse);
+      await cancelReceipt(id);
       setReceiptStatus("CANCELLED");
       setSuccess("Receipt cancelled.");
     } catch (e) {
-      setError(e.message || "Unable to cancel receipt");
+      setError(
+        e.response?.data?.message || e.message || "Unable to cancel receipt",
+      );
     } finally {
       setValidating(false);
     }
@@ -335,23 +315,21 @@ export default function ReceiptFormPage() {
     setSuccess("");
 
     if (isEdit && id) {
-      // Validate existing DRAFT receipt
       setValidating(true);
       try {
-        const data = await authFetch(`${API_URL}/receipts/${id}/validate`, {
-          method: "POST",
-        }).then(readResponse);
+        await validateReceipt(id);
         setReceiptStatus("COMPLETED");
         setSuccess("Receipt validated — stock has been updated!");
       } catch (e) {
-        setError(e.message || "Validation failed");
+        setError(
+          e.response?.data?.message || e.message || "Validation failed",
+        );
       } finally {
         setValidating(false);
       }
       return;
     }
 
-    // New receipt: create a draft first; stock changes only after Ready → Validate.
     const err = validate();
     if (err) {
       setError(err);
@@ -364,24 +342,18 @@ export default function ReceiptFormPage() {
         "Receipt saved as draft. Open it and mark it ready before validation.",
       );
     } catch (e) {
-      setError(e.message || "Validation failed");
+      setError(
+        e.response?.data?.message || e.message || "Validation failed",
+      );
     } finally {
       setValidating(false);
     }
-  }, [
-    isEdit,
-    id,
-    lines,
-    referenceNumber,
-    scheduledDate,
-    notes,
-    selectedWarehouseId,
-    handleSave,
-    navigate,
-  ]);
+  }, [isEdit, id, lines, handleSave]);
 
   const isCompleted =
-    receiptStatus === "COMPLETED" || receiptStatus === "CANCELLED";
+    receiptStatus === "COMPLETED" ||
+    receiptStatus === "DONE" ||
+    receiptStatus === "CANCELLED";
   const isReady = receiptStatus === "READY";
 
   if (loading) {
