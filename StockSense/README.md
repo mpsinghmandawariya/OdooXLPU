@@ -1,532 +1,408 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/StockSense-Inventory%20Management-E85D5D?style=for-the-badge&logo=databricks&logoColor=white" alt="StockSense" />
+# StockSense
 
-<br/>
-<br/>
+### A modern warehouse & inventory management system
 
-[![Node.js](https://img.shields.io/badge/Node.js-v18+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
-[![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Prisma](https://img.shields.io/badge/Prisma-5-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://prisma.io)
-[![SQLite](https://img.shields.io/badge/SQLite-Local-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://sqlite.org)
-[![License](https://img.shields.io/badge/License-ISC-blue?style=flat-square)](LICENSE)
+*Stock movement · Receipts · Deliveries · Adjustments · Full ledger traceability*
 
 <br/>
 
-**A full-stack warehouse and inventory management system.**  
-Track stock movements, receipts, deliveries, transfers, adjustments, and reordering rules — all in one place.
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)](.)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
+[![React](https://img.shields.io/badge/react-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![Prisma](https://img.shields.io/badge/prisma-5-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://prisma.io)
+[![License: ISC](https://img.shields.io/badge/license-ISC-blue?style=flat-square)](./LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](./CONTRIBUTING.md)
 
 <br/>
 
-[🚀 Quick Start](#-quick-start) · [✨ Features](#-features) · [🏗️ Architecture](#️-architecture) · [📡 API Reference](#-api-reference) · [🔐 Security](#-security)
+[Quick Start](#-quick-start) · [Features](#-features) · [Architecture](#️-architecture) · [API Overview](#-api-overview) · [Roadmap](#️-roadmap)
 
 </div>
+
+---
+
+## Why StockSense?
+
+Most inventory tools are either too simple (spreadsheets) or too heavy (full ERP suites). StockSense sits in the middle: a focused, developer-friendly system that gives warehouse and operations teams the workflows they actually need — goods receipts, outbound deliveries, stock transfers, adjustments, and a complete, immutable move ledger — without the overhead of a monolithic platform.
+
+Inspired by Odoo's inventory module, built to be understood, extended, and self-hosted.
+
+---
+
+## 📋 Table of Contents
+
+<details>
+<summary>Expand</summary>
+
+- [Why StockSense?](#why-stocksense)
+- [✨ Features](#-features)
+- [🏗️ Architecture](#️-architecture)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [🚀 Quick Start](#-quick-start)
+- [⚙️ Environment Variables](#️-environment-variables)
+- [📡 API Overview](#-api-overview)
+- [🗄️ Data Model](#️-data-model)
+- [🔒 Security](#-security)
+- [🧪 Testing](#-testing)
+- [🗺️ Roadmap](#️-roadmap)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
+</details>
 
 ---
 
 ## ✨ Features
 
-<table>
-<tr>
-<td width="50%">
+### Inventory & Stock
+- SKU-based product catalogue with categories and unit of measure
+- Multi-warehouse support with named sub-locations
+- Real-time stock balances per product per location
+- Reserved quantity tracking (on-hand vs. free-to-use)
+- Reordering rules engine with min / max / reorder quantity thresholds
 
-**📦 Inventory Operations**
-- Goods receipt (GRN) with validation workflow
-- Delivery management with status tracking
-- Stock transfers between warehouses/locations
-- Inventory adjustments with audit trail
+### Operations
+- **Receipts (GRN)** — validate and complete inbound stock
+- **Deliveries** — validate and complete outbound stock
+- **Transfers** — move stock between locations or warehouses
+- **Adjustments** — correct stock counts with full audit trail
+- Operation lifecycle: `DRAFT → READY → COMPLETED`
+- Auto-generated reference numbers per operation type
 
-</td>
-<td width="50%">
+### Auth & Security
+- Signup, login, logout with JWT sessions (httpOnly cookies)
+- OTP-based forgot / reset password flow
+- Role-based access: `ADMIN` and `INVENTORY_MANAGER`
+- CSRF protection on all state-changing requests
+- Zod validation on both frontend and backend
 
-**📊 Visibility & Reporting**
-- Real-time dashboard with KPIs
-- Full stock ledger (every move recorded)
-- Move history with filters & search
-- Low stock and out-of-stock alerts
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-**🏭 Master Data**
-- Multi-warehouse support
-- Location management per warehouse
-- Product catalogue with categories
-- Unit of measure tracking
-
-</td>
-<td width="50%">
-
-**🔐 Auth & Security**
-- JWT stored in httpOnly cookies
-- CSRF protection on all mutations
-- Role-based access (Admin / Inventory Manager)
-- Bcrypt password hashing + OTP reset flow
-
-</td>
-</tr>
-</table>
+### Dashboard & Insights
+- KPI summary: pending receipts, pending deliveries, low stock, out-of-stock
+- On-hand and free-to-use totals across all locations
+- Recent operations feed
+- Full, filterable stock move history (the ledger)
 
 ---
 
 ## 🏗️ Architecture
 
+### System diagram
+
 ```
-StockSense/                         ← npm workspace root
-├── backend/                        ← Express 5 + Prisma API
+┌─────────────────────────────────────────────────────────┐
+│                        Browser                          │
+│          React 19 + Vite + Tailwind CSS v4              │
+│   React Router · React Hook Form · Zod · Axios          │
+└────────────────────────┬────────────────────────────────┘
+                         │  HTTP + JWT cookie + CSRF token
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│                    Express 5 API                        │
+│         /api/v1/* — 13 route groups                     │
+│   Auth middleware · CSRF middleware · Zod validation    │
+│              Prisma ORM client                          │
+└────────────────────────┬────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│              SQLite (dev) · PostgreSQL (prod)           │
+│         10 models · immutable StockMove ledger          │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Monorepo layout
+
+```
+StockSense/                        ← npm workspaces root
+├── backend/
 │   ├── prisma/
-│   │   ├── schema.prisma           ← Database schema (SQLite)
-│   │   └── seed.js                 ← Demo data seeder
+│   │   ├── schema.prisma          ← single source of truth for the DB
+│   │   └── seed.js                ← demo data (products, warehouses, admin)
 │   └── src/
-│       ├── modules/                ← Feature modules
-│       │   ├── dashboard/          ← KPI aggregations
-│       │   ├── receipt/            ← Goods receipt (GRN)
-│       │   ├── delivery/           ← Outbound deliveries
-│       │   ├── inventory/          ← Transfers & adjustments
-│       │   ├── stock/              ← Stock balance queries
-│       │   ├── move-history/       ← Stock ledger
-│       │   ├── products/           ← Product catalogue
-│       │   ├── category/           ← Product categories
-│       │   ├── warehouse/          ← Warehouse management
-│       │   ├── location/           ← Location management
-│       │   ├── reordering/         ← Reorder rules
-│       │   └── user/               ← User management
-│       ├── middleware/             ← Auth, CSRF, error handling
-│       ├── utils/                  ← JWT, stock engine, ref generator
-│       └── app.js                  ← Express app + route registration
-│
-└── frontend/                       ← React 19 + Vite SPA
-    └── src/
-        ├── pages/
-        │   ├── auth/               ← Login, Signup, Forgot Password
-        │   ├── dashboard/          ← Main dashboard
-        │   ├── operations/         ← Receipts, Deliveries, Transfers, Adjustments
-        │   ├── products/           ← Product catalogue
-        │   ├── reordering/         ← Reorder rules
-        │   ├── profile/            ← User profile
-        │   └── settings/           ← App settings
-        ├── services/               ← Axios API service layer
-        ├── context/                ← Auth context (JWT + user state)
-        └── routes/                 ← Protected & public route guards
+│       ├── modules/               ← one folder per domain feature
+│       │   ├── dashboard/
+│       │   ├── receipt/
+│       │   ├── delivery/
+│       │   ├── inventory/         ← transfers & adjustments
+│       │   ├── stock/
+│       │   ├── move-history/
+│       │   ├── products/
+│       │   ├── category/
+│       │   ├── warehouse/
+│       │   ├── location/
+│       │   ├── reordering/
+│       │   └── user/
+│       ├── middleware/            ← auth, CSRF, error handler
+│       ├── utils/                 ← JWT helpers, stock engine, ref generator
+│       ├── validators/            ← Zod schemas
+│       └── app.js
+├── frontend/
+│   └── src/
+│       ├── pages/                 ← auth, dashboard, operations, products…
+│       ├── components/            ← Button, Input, ErrorMessage
+│       ├── services/              ← Axios API layer per domain
+│       ├── context/               ← AuthContext
+│       └── routes/                ← ProtectedRoute / PublicRoute guards
+└── database/                      ← schema notes and planning docs
 ```
-
----
-
-## 🚀 Running Locally
-
-### Prerequisites
-
-| Requirement | Version | Download |
-|---|---|---|
-| Node.js | v18 or higher | [nodejs.org](https://nodejs.org) |
-| npm | v9 or higher | Included with Node.js |
-| Git | any | [git-scm.com](https://git-scm.com) |
-
-> ✅ No database server needed — SQLite is used and the database file is created automatically.
-
----
-
-### Step 1 — Clone the repository
-
-```bash
-git clone <repository-url>
-cd StockSense
-```
-
----
-
-### Step 2 — Install all dependencies
-
-```bash
-npm install
-```
-
-> Installs dependencies for both `backend` and `frontend` in one command via npm workspaces.
-
----
-
-### Step 3 — Set up environment variables
-
-**macOS / Linux:**
-```bash
-cp backend/.env.example backend/.env
-```
-
-**Windows (Command Prompt):**
-```cmd
-copy backend\.env.example backend\.env
-```
-
-**Windows (PowerShell):**
-```powershell
-Copy-Item backend\.env.example backend\.env
-```
-
-Then open `backend/.env` and set your values:
-
-```env
-JWT_SECRET="any-long-random-string-here"
-ADMIN_PASSWORD="your-admin-password"
-PORT=5000
-CLIENT_URL="http://localhost:5173"
-```
-
-| Variable | Required | Description |
-|---|---|---|
-| `JWT_SECRET` | Production only | Any long random string. A dev fallback is used if omitted. |
-| `ADMIN_PASSWORD` | Yes (for seeding) | Sets the password for the default `admin001` account |
-| `PORT` | No | Backend port — defaults to `5000` |
-| `CLIENT_URL` | No | Frontend origin for CORS — defaults to `http://localhost:5173` |
-
----
-
-### Step 4 — Push the database schema
-
-This creates the local SQLite database file at `backend/prisma/stocksense.db`:
-
-```bash
-npm run prisma:migrate --workspace=stocksense-backend
-```
-
-> This step runs automatically when you start the dev server, so you can skip it if going straight to Step 6.
-
----
-
-### Step 5 — Seed demo data *(optional but recommended)*
-
-Populates the database with sample products, warehouses, and inventory operations:
-
-```bash
-npm run prisma:seed --workspace=stocksense-backend
-```
-
-Creates a default admin account you can log in with immediately:
-
-| Field | Value |
-|---|---|
-| Login ID | `admin001` |
-| Email | `admin@stocksense.local` |
-| Password | *(your `ADMIN_PASSWORD` from `.env`)* |
-| Role | `ADMIN` |
-
----
-
-### Step 6 — Start the development server
-
-```bash
-npm run dev
-```
-
-This starts both backend and frontend concurrently:
-
-| Service | URL | Description |
-|---|---|---|
-| 🌐 Frontend | http://localhost:5173 | React + Vite UI |
-| ⚙️ Backend API | http://localhost:5000 | Express REST API |
-| ❤️ Health check | http://localhost:5000/api/health | Verify API is running |
-
----
-
-### Troubleshooting
-
-<details>
-<summary><strong>❌ <code>prisma db push</code> fails on startup</strong></summary>
-
-Check that `backend/.env` exists and has no syntax errors. The file must exist even if all values are defaults.
-
-```bash
-# Verify the file exists
-ls backend/.env        # macOS/Linux
-dir backend\.env       # Windows
-```
-
-</details>
-
-<details>
-<summary><strong>❌ Port already in use</strong></summary>
-
-Change the port in `backend/.env`:
-
-```env
-PORT=5001
-```
-
-Then update the frontend API base URL in `frontend/src/services/api.js` or set `VITE_API_URL` in a `frontend/.env` file:
-
-```env
-VITE_API_URL=http://localhost:5001/api/v1
-```
-
-</details>
-
-<details>
-<summary><strong>❌ CORS errors in the browser</strong></summary>
-
-Make sure `CLIENT_URL` in `backend/.env` matches the exact origin the frontend is running on (including port):
-
-```env
-CLIENT_URL="http://localhost:5173"
-```
-
-</details>
-
-<details>
-<summary><strong>❌ Merge conflict markers in source files</strong></summary>
-
-If you see `SyntaxError: Unexpected token '<<'`, there are unresolved Git merge conflicts in the codebase. Search for files containing `<<<<<<<` and resolve them before running.
-
-</details>
-
----
-
-## 📜 Scripts
-
-### Root (run from project root)
-
-| Script | Description |
-|---|---|
-| `npm run dev` | Start backend + frontend together |
-| `npm run dev:backend` | Start backend only (with nodemon) |
-| `npm run dev:frontend` | Start frontend only (Vite) |
-| `npm run build` | Build frontend for production |
-| `npm run start` | Start backend in production mode |
-
-### Backend workspace
-
-```bash
-# Push schema to database (runs automatically on dev/start)
-npm run prisma:migrate --workspace=stocksense-backend
-
-# Open Prisma Studio — visual database browser
-npm run prisma:studio --workspace=stocksense-backend
-
-# Re-seed the database
-npm run prisma:seed --workspace=stocksense-backend
-
-# Run security tests
-npm test --workspace=stocksense-backend
-```
-
----
-
-## 📡 API Reference
-
-**Base URL:** `http://localhost:5000/api/v1`
-
-<details>
-<summary><strong>🔑 Auth</strong></summary>
-
-```
-POST   /auth/signup              Register a new user
-POST   /auth/login               Login and receive JWT cookie
-POST   /auth/logout              Clear session cookie
-POST   /auth/forgot-password     Request OTP for password reset
-POST   /auth/reset-password      Reset password using OTP
-GET    /auth/me                  Get current authenticated user
-```
-
-</details>
-
-<details>
-<summary><strong>📦 Products & Categories</strong></summary>
-
-```
-GET    /products                 List all products
-POST   /products                 Create a product
-GET    /products/:id             Get product by ID
-PATCH  /products/:id             Update product
-DELETE /products/:id             Delete product
-
-GET    /categories               List all categories
-POST   /categories               Create a category
-GET    /categories/:id           Get category by ID
-PATCH  /categories/:id           Update category
-DELETE /categories/:id           Delete category
-```
-
-</details>
-
-<details>
-<summary><strong>🏭 Warehouses & Locations</strong></summary>
-
-```
-GET    /warehouses               List all warehouses
-POST   /warehouses               Create a warehouse
-GET    /warehouses/:id           Get warehouse by ID
-PATCH  /warehouses/:id           Update warehouse
-DELETE /warehouses/:id           Delete warehouse
-
-GET    /locations                List all locations
-POST   /locations                Create a location
-GET    /locations/:id            Get location by ID
-PATCH  /locations/:id            Update location
-DELETE /locations/:id            Delete location
-```
-
-</details>
-
-<details>
-<summary><strong>🚚 Receipts & Deliveries</strong></summary>
-
-```
-GET    /receipts                 List receipts (filterable)
-POST   /receipts                 Create a receipt (GRN)
-GET    /receipts/:id             Get receipt by ID
-PATCH  /receipts/:id/validate    Move to READY status
-PATCH  /receipts/:id/complete    Complete and update stock
-
-GET    /deliveries               List deliveries (filterable)
-POST   /deliveries               Create a delivery
-GET    /deliveries/:id           Get delivery by ID
-PATCH  /deliveries/:id/validate  Move to READY status
-PATCH  /deliveries/:id/complete  Complete and deduct stock
-```
-
-</details>
-
-<details>
-<summary><strong>🔄 Transfers, Adjustments & Stock</strong></summary>
-
-```
-GET    /operations               List all inventory operations
-POST   /operations               Create transfer or adjustment
-GET    /stock                    Current stock balances by location
-GET    /move-history             Full stock ledger with filters
-```
-
-</details>
-
-<details>
-<summary><strong>🔔 Reordering Rules</strong></summary>
-
-```
-GET    /reordering-rules         List all reordering rules
-POST   /reordering-rules         Create a reordering rule
-GET    /reordering-rules/:id     Get rule by ID
-PATCH  /reordering-rules/:id     Update rule
-DELETE /reordering-rules/:id     Delete rule
-```
-
-</details>
-
-<details>
-<summary><strong>📊 Dashboard & Health</strong></summary>
-
-```
-GET    /dashboard                KPI summary (pending ops, stock stats)
-GET    /csrf-token               Fetch CSRF token (required before mutations)
-GET    /api/health               Service health check
-GET    /api/v1/health            API version health check
-```
-
-</details>
-
----
-
-## 🔐 Security
-
-<details>
-<summary><strong>How authentication works</strong></summary>
-
-1. `POST /auth/login` — validates credentials, returns a JWT stored in an **httpOnly cookie** (never accessible via JavaScript)
-2. All protected routes verify the JWT from the cookie via the auth middleware
-3. On `401`, the frontend automatically redirects to `/login` and clears local storage
-4. `POST /auth/logout` clears the session cookie server-side
-
-</details>
-
-<details>
-<summary><strong>How CSRF protection works</strong></summary>
-
-1. Before any mutation (POST / PATCH / DELETE), the frontend calls `GET /csrf-token`
-2. The server sets a `csrfToken` **httpOnly cookie** and returns the same token in the response body
-3. The frontend sends the token as the `X-CSRF-Token` header on every mutation
-4. The server compares the header value against the cookie using **timing-safe comparison** (`crypto.timingSafeEqual`)
-5. Auth routes (`/api/v1/auth/*`) and read-only methods (GET, HEAD, OPTIONS) are exempt
-
-</details>
-
-<details>
-<summary><strong>Other security measures</strong></summary>
-
-- Passwords hashed with **bcrypt** (cost factor 10)
-- Input validated with **Zod** on both frontend and backend
-- CORS restricted to `localhost:5173` and `localhost:5174` only
-- `.env` files excluded from version control via `.gitignore`
-- `JWT_SECRET` falls back to a dev-only default — **always set a real secret in production**
-
-</details>
-
----
-
-## 🗄️ Database
-
-The SQLite database is created automatically at `backend/prisma/stocksense.db` on first run. No setup required.
-
-<details>
-<summary><strong>Data model overview</strong></summary>
-
-| Model | Description |
-|---|---|
-| `User` | Accounts with roles (ADMIN / INVENTORY_MANAGER) |
-| `PasswordResetOTP` | OTP records for password reset flow |
-| `Product` | Product catalogue with SKU, category, unit price |
-| `Category` | Product categories |
-| `Warehouse` | Physical warehouse locations |
-| `Location` | Sub-locations within a warehouse |
-| `StockBalance` | Current quantity per product per location |
-| `StockMove` | Immutable ledger — every stock change is recorded here |
-| `InventoryOperation` | Receipts, deliveries, transfers, adjustments |
-| `ReorderingRule` | Min/max/reorder quantity rules per product/location |
-
-</details>
-
-<details>
-<summary><strong>Reset the database</strong></summary>
-
-```bash
-# 1. Delete the database file
-del backend\prisma\stocksense.db
-
-# 2. Re-create the schema
-npm run prisma:migrate --workspace=stocksense-backend
-
-# 3. Re-seed with demo data
-npm run prisma:seed --workspace=stocksense-backend
-```
-
-</details>
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology | Version |
+| Layer | Technology | Purpose |
 |---|---|---|
-| Frontend framework | React | 19 |
-| Build tool | Vite | 8 |
-| Styling | Tailwind CSS | 4 |
-| Routing | React Router | 7 |
-| Forms | React Hook Form + Zod | latest |
-| HTTP client | Axios | latest |
-| Icons | Lucide React | latest |
-| Backend framework | Express | 5 |
-| ORM | Prisma | 5 |
-| Database | SQLite | — |
-| Auth | JWT + httpOnly cookies | — |
-| Validation | Zod | 4 |
-| Password hashing | bcrypt | 6 |
-| Dev server | nodemon | 3 |
-| Monorepo | npm workspaces | — |
+| UI framework | React 19 | Component-based SPA |
+| Build tool | Vite 8 | Dev server and production bundler |
+| Styling | Tailwind CSS v4 | Utility-first CSS |
+| Routing | React Router v7 | Client-side routing with route guards |
+| Forms & validation | React Hook Form + Zod | Type-safe form handling |
+| HTTP client | Axios | API requests with interceptors |
+| Icons | lucide-react | Consistent icon set |
+| API framework | Express 5 | REST API server |
+| ORM | Prisma 5 | Type-safe DB access, migrations |
+| Database (dev) | SQLite | Zero-config local database |
+| Database (prod) | PostgreSQL | Production-grade relational DB |
+| Auth | JWT + httpOnly cookies | Stateless, XSS-resistant sessions |
+| Password hashing | bcrypt | Secure credential storage |
+| Validation | Zod | Runtime schema validation (both layers) |
+| Dev runner | nodemon | Auto-restart on file changes |
+| Monorepo | npm workspaces | Single `npm install` for all packages |
 
 ---
 
-<div align="center">
+## 🚀 Quick Start
 
-Made with ❤️ · StockSense v1.0.0
+> **No external database, no Docker, no `.env` required for local development.**  
+> The backend creates a local SQLite file automatically on first run.
 
-</div>
+### Prerequisites
+
+- Node.js ≥ 18
+- npm ≥ 9
+
+### 1. Clone
+
+```bash
+git clone https://github.com/<your-username>/stocksense.git
+cd stocksense
+```
+
+### 2. Install all dependencies
+
+```bash
+npm install
+```
+
+This installs dependencies for both `backend` and `frontend` via npm workspaces.
+
+### 3. Configure environment *(optional for local dev)*
+
+```bash
+# macOS / Linux
+cp backend/.env.example backend/.env
+
+# Windows (Command Prompt)
+copy backend\.env.example backend\.env
+
+# Windows (PowerShell)
+Copy-Item backend\.env.example backend\.env
+```
+
+Edit `backend/.env` with your values (see [Environment Variables](#️-environment-variables)).  
+For local development, the backend runs with safe defaults — no `.env` file is strictly required.
+
+### 4. Seed demo data *(optional but recommended)*
+
+```bash
+npm run prisma:seed --workspace=stocksense-backend
+```
+
+Creates sample products, warehouses, and a default admin account:
+
+| Field | Value |
+|---|---|
+| Login ID | `admin001` |
+| Email | `admin@stocksense.local` |
+| Password | value of `ADMIN_PASSWORD` in your `.env` |
+
+### 5. Run
+
+```bash
+npm run dev
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:5000 |
+| Health check | http://localhost:5000/api/health |
+
+Both services start concurrently. The backend pushes the Prisma schema to SQLite before nodemon starts.
+
+---
+
+## ⚙️ Environment Variables
+
+All variables live in `backend/.env`. Copy from `backend/.env.example` to get started.
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `JWT_SECRET` | **Production** | dev fallback string | Secret used to sign JWTs. Must be long and random in production. |
+| `ADMIN_PASSWORD` | For seeding | — | Password assigned to the `admin001` seed account. |
+| `PORT` | No | `5000` | Port the Express server listens on. |
+| `CLIENT_URL` | No | `http://localhost:5173` | Allowed CORS origin for the frontend. |
+
+> In production, always set `JWT_SECRET` to a cryptographically random string (≥ 32 characters). The security test will fail if a known-weak default is detected.
+
+---
+
+## 📡 API Overview
+
+**Base URL:** `http://localhost:5000/api/v1`
+
+All protected routes require a valid JWT cookie. All mutation routes (`POST`, `PATCH`, `DELETE`) additionally require an `X-CSRF-Token` header obtained from `GET /csrf-token`.
+
+| Route group | Prefix | Notes |
+|---|---|---|
+| Health | `GET /api/health` | No auth required |
+| CSRF | `GET /csrf-token` | Call before any mutation |
+| Auth | `/auth` | Signup, login, logout, forgot/reset password, me |
+| Dashboard | `/dashboard` | KPI summary — protected |
+| Products | `/products` | CRUD — protected |
+| Categories | `/categories` | CRUD — protected |
+| Warehouses | `/warehouses` | CRUD — protected |
+| Locations | `/locations` | CRUD — protected |
+| Stock | `/stock` | Current balances per product/location — protected |
+| Receipts | `/receipts` | Create, validate, complete GRNs — protected |
+| Deliveries | `/deliveries` | Create, validate, complete deliveries — protected |
+| Operations | `/operations` | Transfers and adjustments — protected |
+| Move history | `/move-history` | Filterable stock ledger — protected |
+| Reordering rules | `/reordering-rules` | CRUD for min/max rules — protected |
+| Users | `/users` | User management — protected |
+
+<details>
+<summary><strong>Auth routes</strong></summary>
+
+```
+POST   /auth/signup
+POST   /auth/login
+POST   /auth/logout
+POST   /auth/forgot-password
+POST   /auth/reset-password
+GET    /auth/me
+```
+
+</details>
+
+<details>
+<summary><strong>Inventory operation lifecycle</strong></summary>
+
+```
+POST   /receipts                    Create (status: DRAFT)
+PATCH  /receipts/:id/validate       → READY
+PATCH  /receipts/:id/complete       → COMPLETED  (updates StockBalance, writes StockMove)
+
+POST   /deliveries                  Create (status: DRAFT)
+PATCH  /deliveries/:id/validate     → READY
+PATCH  /deliveries/:id/complete     → COMPLETED  (deducts StockBalance, writes StockMove)
+
+POST   /operations                  Create transfer or adjustment
+```
+
+</details>
+
+---
+
+## 🗄️ Data Model
+
+```prisma
+// Simplified — see backend/prisma/schema.prisma for the full schema
+
+User              → has role (ADMIN | INVENTORY_MANAGER)
+Category          → groups Products
+Product           → SKU-based, belongs to Category, has StockBalances
+Warehouse         → has many Locations
+Location          → belongs to Warehouse, has StockBalances
+StockBalance      → current quantity + reservedQuantity per (Product, Location)
+StockMove         → immutable ledger entry for every stock change
+InventoryOperation→ receipt | delivery | transfer | adjustment (DRAFT→READY→COMPLETED)
+ReorderingRule    → min/max/reorder thresholds per (Product, Warehouse?, Location?)
+PasswordResetOTP  → hashed OTP with expiry and attempt tracking
+```
+
+### The ledger pattern
+
+`StockMove` is the single source of truth for all stock changes. Every time an `InventoryOperation` is completed, one or more `StockMove` records are written — they are never updated or deleted. `StockBalance` is a derived, mutable snapshot that reflects the current state. This separation means you can always reconstruct balances from the move history and audit exactly what happened, when, and by whom.
+
+---
+
+## 🔒 Security
+
+| Practice | Implementation |
+|---|---|
+| Password hashing | bcrypt with cost factor 10 |
+| Session tokens | JWT signed with `JWT_SECRET`, stored in httpOnly cookies (not localStorage) |
+| CSRF protection | Double-submit cookie pattern with `crypto.timingSafeEqual` comparison |
+| Input validation | Zod schemas enforced on both frontend (forms) and backend (request bodies) |
+| CORS | Restricted to explicit allowed origins (`localhost:5173`, `localhost:5174`) |
+| OTP security | OTPs are hashed before storage; expiry and attempt limits enforced |
+| Secrets hygiene | `.env` excluded from VCS; production requires explicit `JWT_SECRET` |
+| Security test | CI-level assertion that `JWT_SECRET` is not a known-weak default |
+
+---
+
+## 🧪 Testing
+
+A security smoke test ships with the backend. It asserts that `JWT_SECRET` is not set to any known-weak default value:
+
+```bash
+npm test --workspace=stocksense-backend
+```
+
+Expected output:
+
+```
+security checks passed
+```
+
+The test is intentionally lightweight — it validates the security posture of the environment configuration, not application logic. Additional unit and integration tests are a planned roadmap item.
+
+---
+
+## 🗺️ Roadmap
+
+These are ideas under consideration, not committed features.
+
+- [ ] **Barcode / QR scanning** — scan products during receipt and delivery operations via a mobile-friendly interface
+- [ ] **Reporting & exports** — CSV / PDF exports for stock reports, move history, and operation summaries
+- [ ] **Multi-currency pricing** — per-warehouse or per-operation currency support with exchange rate tracking
+- [ ] **Notification system** — email or in-app alerts when stock falls below reorder thresholds
+- [ ] **Audit log UI** — a dedicated admin view over the raw `StockMove` ledger with advanced filtering and export
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome. Please follow this workflow:
+
+1. **Fork** the repository and create your branch from `main`:
+   ```bash
+   git checkout -b feat/your-feature-name
+   ```
+
+2. **Make your changes.** Keep commits focused and descriptive.
+
+3. **Test your changes** locally with `npm run dev` and run `npm test --workspace=stocksense-backend`.
+
+4. **Open a Pull Request** against `main` with a clear description of what changed and why.
+
+For significant changes, open an issue first to discuss the approach before writing code.
+
+---
+
+## 📄 License
+
+[ISC](./LICENSE) © StockSense Contributors
