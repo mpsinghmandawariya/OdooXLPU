@@ -5,17 +5,19 @@ const { signToken } = require("../utils/jwt");
 const prisma = require("../config/database");
 
 const normalizeEmail = (email) => email.trim().toLowerCase();
+const normalizeLoginId = (loginId) => loginId.trim().toLowerCase();
 
 const generateOtp = () => crypto.randomInt(100000, 1000000).toString();
 
 const signup = async (req, res, next) => {
   try {
     const { loginId, email, password } = req.validatedBody;
+    const normalizedLoginId = normalizeLoginId(loginId);
     const normalizedEmail = normalizeEmail(email);
 
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ loginId }, { email: normalizedEmail }],
+        OR: [{ loginId: normalizedLoginId }, { email: normalizedEmail }],
       },
     });
 
@@ -30,7 +32,7 @@ const signup = async (req, res, next) => {
 
     const user = await prisma.user.create({
       data: {
-        loginId,
+        loginId: normalizedLoginId,
         email: normalizedEmail,
         passwordHash,
       },
@@ -59,15 +61,9 @@ const login = async (req, res, next) => {
     const user = await prisma.user.findFirst({
       where: {
         OR: [
-          {
-            loginId: {
-              equals: identifier,
-              mode: "insensitive",
-            },
-          },
-          {
-            email: normalizedIdentifier,
-          },
+          { loginId: identifier },
+          { loginId: normalizedIdentifier },
+          { email: normalizedIdentifier },
         ],
       },
     });

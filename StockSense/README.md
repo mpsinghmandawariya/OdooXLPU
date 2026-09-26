@@ -10,10 +10,10 @@ StockSense is a warehouse and inventory management application for stock movemen
 
 ## Local development
 
-1. Set up PostgreSQL locally.
-2. Configure backend environment values in `backend/.env`.
-3. Run the backend API from `backend/`.
-4. Run the frontend app from `frontend/`.
+1. Run `npm install` from the project root.
+2. Run `npm run dev` to start the backend and frontend. The backend creates and initializes a local SQLite database automatically.
+
+No PostgreSQL server or database URL is required for local development. Set `JWT_SECRET` in the environment for production deployments.
 
 ## Core auth flow
 

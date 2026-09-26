@@ -11,9 +11,9 @@ const getWarehouses = async (query = {}) => {
   if (query.search) {
     const search = query.search.trim();
     where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { code: { contains: search, mode: "insensitive" } },
-      { location: { contains: search, mode: "insensitive" } },
+      { name: { contains: search } },
+      { code: { contains: search } },
+      { location: { contains: search } },
     ];
   }
 

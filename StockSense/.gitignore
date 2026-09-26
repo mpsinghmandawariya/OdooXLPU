@@ -3,7 +3,11 @@ node_modules/
 **/.env
 dist/
 .DS_Store
+<<<<<<< HEAD
 *.db
 *.db-journal
 *.db-shm
 *.db-wal
+=======
+backend/prisma/stocksense.db*
+>>>>>>> 7f556a06caa74801dc859dd070516c7a478acb98

@@ -33,14 +33,12 @@ const getStock = async ({
               {
                 name: {
                   contains: search,
-                  mode: "insensitive",
                 },
               },
 
               {
                 sku: {
                   contains: search,
-                  mode: "insensitive",
                 },
               },
             ],

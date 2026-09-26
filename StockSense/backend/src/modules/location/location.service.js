@@ -62,8 +62,8 @@ const getLocations = async ({
     ...(search
       ? {
           OR: [
-            { name: { contains: search, mode: "insensitive" } },
-            { shortCode: { contains: search, mode: "insensitive" } },
+            { name: { contains: search } },
+            { shortCode: { contains: search } },
           ],
         }
       : {}),
