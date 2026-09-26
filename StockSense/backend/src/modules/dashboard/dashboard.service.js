@@ -16,6 +16,7 @@ const getDashboardSummary = async () => {
     lateReceipts,
     lateDeliveries,
     stockBalances,
+    reorderingRules,
     recentOperations,
   ] = await prisma.$transaction([
     prisma.product.count({
@@ -84,8 +85,21 @@ const getDashboardSummary = async () => {
         location: { isActive: true },
       },
       select: {
+        productId: true,
+        locationId: true,
         quantity: true,
         reservedQuantity: true,
+        location: { select: { warehouseId: true } },
+      },
+    }),
+
+    prisma.reorderingRule.findMany({
+      where: { isActive: true },
+      select: {
+        productId: true,
+        warehouseId: true,
+        locationId: true,
+        minimumQuantity: true,
       },
     }),
 
@@ -108,11 +122,27 @@ const getDashboardSummary = async () => {
 
   const onHand = Number(totalOnHand._sum.quantity || 0);
   const reserved = Number(totalReserved._sum.reservedQuantity || 0);
-  const lowStock = stockBalances.filter((balance) => {
+  const fallbackLowStock = stockBalances.filter((balance) => {
     const freeToUse =
       Number(balance.quantity) - Number(balance.reservedQuantity);
     return freeToUse > 0 && freeToUse <= 10;
   }).length;
+  const ruleLowStock = reorderingRules.filter((rule) => {
+    const matchingBalances = stockBalances.filter(
+      (balance) =>
+        balance.productId === rule.productId &&
+        (!rule.locationId || balance.locationId === rule.locationId) &&
+        (!rule.warehouseId ||
+          balance.location.warehouseId === rule.warehouseId),
+    );
+    const freeToUse = matchingBalances.reduce(
+      (sum, balance) =>
+        sum + Number(balance.quantity) - Number(balance.reservedQuantity),
+      0,
+    );
+    return freeToUse <= Number(rule.minimumQuantity);
+  }).length;
+  const lowStock = reorderingRules.length ? ruleLowStock : fallbackLowStock;
   const outOfStock = stockBalances.filter((balance) => {
     return Number(balance.quantity) - Number(balance.reservedQuantity) <= 0;
   }).length;

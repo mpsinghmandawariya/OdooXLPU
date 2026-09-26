@@ -27,7 +27,7 @@ import { useAuth } from "../../context/AuthContext";
 const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const todayLabel = new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
     month: "short",
@@ -79,6 +79,7 @@ const Dashboard = () => {
     { name: "Settings", path: "/settings", icon: Settings },
     { name: "Stock", path: "/stock", icon: Package },
     { name: "Move History", path: "/move-history", icon: History },
+    { name: "Reorder Rules", path: "/reordering-rules", icon: AlertCircle },
   ];
 
   const isActive = (path) =>
@@ -173,13 +174,23 @@ const Dashboard = () => {
               </span>
             </button>
 
-            <button className="hidden items-center gap-2 rounded-xl p-1.5 hover:bg-gray-50 sm:flex">
+            <Link
+              to="/profile"
+              className="hidden items-center gap-2 rounded-xl p-1.5 hover:bg-gray-50 sm:flex"
+            >
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#E85D5D] text-xs font-bold text-white">
-                M
+                {(user?.loginId || "U").charAt(0).toUpperCase()}
               </div>
-
+              <div className="hidden text-left xl:block">
+                <div className="text-xs font-bold text-[#172033]">
+                  {user?.loginId || "User"}
+                </div>
+                <div className="text-[10px] text-gray-400">
+                  {user?.role || "USER"}
+                </div>
+              </div>
               <ChevronDown size={15} className="text-gray-400" />
-            </button>
+            </Link>
 
             <button
               onClick={handleLogout}
