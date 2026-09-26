@@ -14,7 +14,9 @@ const createReceiptSchema = z.object({
   contact: z.string().trim().max(200).optional(),
   referenceNumber: z.string().trim().min(1).max(80).optional(),
   notes: z.string().trim().max(500).nullable().optional(),
-  scheduledDate: z.union([z.string().datetime({ offset: true }), z.string().date(), z.date()]).optional(),
+  scheduledDate: z
+    .union([z.string().datetime({ offset: true }), z.string().date(), z.date()])
+    .optional(),
   status: z.enum(["DRAFT", "COMPLETED"]).optional(),
 });
 
@@ -24,7 +26,11 @@ router.use(authenticate);
 router.get("/next-reference", receiptController.getNextReference);
 router.get("/", receiptController.getReceipts);
 router.get("/:id", receiptController.getReceiptById);
-router.post("/", validationMiddleware(createReceiptSchema), receiptController.createReceipt);
+router.post(
+  "/",
+  validationMiddleware(createReceiptSchema),
+  receiptController.createReceipt,
+);
 router.post("/:id/ready", receiptController.markReceiptReady);
 router.post("/:id/validate", receiptController.validateReceipt);
 router.post("/:id/cancel", receiptController.cancelReceipt);

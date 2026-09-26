@@ -65,6 +65,7 @@ export default function ReceiptFormPage() {
 
   // ── meta ──────────────────────────────────────────────
   const [referenceNumber, setReferenceNumber] = useState("");
+  const [contact, setContact] = useState("");
   const [scheduledDate, setScheduledDate] = useState(
     new Date().toISOString().slice(0, 10),
   );
@@ -156,6 +157,7 @@ export default function ReceiptFormPage() {
         const r = data?.data;
         if (!r) return;
         setReferenceNumber(r.referenceNumber || "");
+        setContact(r.contact || "");
         setScheduledDate(r.scheduledDate ? r.scheduledDate.slice(0, 10) : "");
         setNotes(r.notes || "");
         setReceiptStatus(r.status || "DRAFT");
@@ -208,6 +210,10 @@ export default function ReceiptFormPage() {
 
   // ── validation ────────────────────────────────────────
   const validate = () => {
+    if (!contact.trim()) return "Supplier / Contact is required";
+    if (!selectedWarehouseId) return "Please select a warehouse";
+    if (!scheduledDate) return "Please select a scheduled date";
+
     for (const l of lines) {
       if (!l.productId) return "Please select a product for all lines";
       if (!l.locationId) return "Please select a location for all lines";
@@ -238,6 +244,7 @@ export default function ReceiptFormPage() {
               warehouseId: selectedWarehouseId || undefined,
               quantity: Number(l.quantity),
               unitCost: Number(l.unitCost) || undefined,
+              contact: contact.trim(),
               referenceNumber:
                 lines.indexOf(l) === 0
                   ? referenceNumber || undefined
@@ -268,6 +275,7 @@ export default function ReceiptFormPage() {
     }
   }, [
     lines,
+    contact,
     referenceNumber,
     scheduledDate,
     notes,
@@ -285,7 +293,9 @@ export default function ReceiptFormPage() {
     setValidating(true);
     setError("");
     try {
-      await authFetch(`${API_URL}/receipts/${id}/ready`, { method: "POST" }).then(readResponse);
+      await authFetch(`${API_URL}/receipts/${id}/ready`, {
+        method: "POST",
+      }).then(readResponse);
       setReceiptStatus("READY");
       setSuccess("Receipt marked ready. You can now validate it.");
     } catch (e) {
@@ -304,7 +314,9 @@ export default function ReceiptFormPage() {
     setValidating(true);
     setError("");
     try {
-      await authFetch(`${API_URL}/receipts/${id}/cancel`, { method: "POST" }).then(readResponse);
+      await authFetch(`${API_URL}/receipts/${id}/cancel`, {
+        method: "POST",
+      }).then(readResponse);
       setReceiptStatus("CANCELLED");
       setSuccess("Receipt cancelled.");
     } catch (e) {
@@ -345,7 +357,9 @@ export default function ReceiptFormPage() {
     setValidating(true);
     try {
       await handleSave();
-      setSuccess("Receipt saved as draft. Open it and mark it ready before validation.");
+      setSuccess(
+        "Receipt saved as draft. Open it and mark it ready before validation.",
+      );
     } catch (e) {
       setError(e.message || "Validation failed");
     } finally {
@@ -363,7 +377,8 @@ export default function ReceiptFormPage() {
     navigate,
   ]);
 
-  const isCompleted = receiptStatus === "COMPLETED" || receiptStatus === "CANCELLED";
+  const isCompleted =
+    receiptStatus === "COMPLETED" || receiptStatus === "CANCELLED";
   const isReady = receiptStatus === "READY";
 
   if (loading) {
@@ -437,6 +452,20 @@ export default function ReceiptFormPage() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="field-group">
+            <label>
+              Supplier / Contact <span style={{ color: "#e95757" }}>*</span>
+            </label>
+            <input
+              type="text"
+              value={contact}
+              onChange={(event) => setContact(event.target.value)}
+              placeholder="Enter supplier or contact name"
+              maxLength={200}
+              disabled={isCompleted}
+            />
           </div>
 
           <div className="field-group">
@@ -621,23 +650,32 @@ export default function ReceiptFormPage() {
                 {saving ? "Saving..." : "Save Draft"}
               </button>
 
-              {!isReady && <button
+              {!isReady && (
+                <button
+                  type="button"
+                  className="primary-btn"
+                  onClick={handleReady}
+                  disabled={saving || validating}
+                >
+                  {validating ? "Updating..." : "Mark Ready"}
+                </button>
+              )}
+              {isReady && (
+                <button
+                  type="button"
+                  className="primary-btn"
+                  onClick={handleValidate}
+                  disabled={saving || validating}
+                >
+                  {validating ? "Validating..." : "Validate"}
+                </button>
+              )}
+              <button
                 type="button"
-                className="primary-btn"
-                onClick={handleReady}
+                className="ghost-btn"
+                onClick={handleCancel}
                 disabled={saving || validating}
               >
-                {validating ? "Updating..." : "Mark Ready"}
-              </button>}
-              {isReady && <button
-                type="button"
-                className="primary-btn"
-                onClick={handleValidate}
-                disabled={saving || validating}
-              >
-                {validating ? "Validating..." : "Validate"}
-              </button>}
-              <button type="button" className="ghost-btn" onClick={handleCancel} disabled={saving || validating}>
                 Cancel Receipt
               </button>
             </>

@@ -69,6 +69,7 @@ const Dashboard = () => {
   const navItems = [
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "Operations", path: "/operations/receipts", icon: ClipboardList },
+    { name: "Products", path: "/products", icon: Package },
     { name: "Transfer", path: "/operations/transfers/new", icon: ArrowRight },
     {
       name: "Adjustment",

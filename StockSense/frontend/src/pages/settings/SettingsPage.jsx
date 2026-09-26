@@ -5,6 +5,17 @@ import "../operations/receipts.css";
 
 const initialWarehouse = { name: "", code: "", address: "" };
 const initialLocation = { name: "", shortCode: "", warehouseId: "" };
+const SETTINGS_KEY = "stocksense_settings";
+const initialSettings = {
+  companyName: "StockSense",
+  defaultWarehouseId: "",
+  defaultLocationId: "",
+  trackStock: true,
+  allowNegativeStock: false,
+  autoUpdateStock: true,
+  lowStockAlert: true,
+  lowStockThreshold: 10,
+};
 
 export default function SettingsPage() {
   const [warehouses, setWarehouses] = useState([]);
@@ -13,6 +24,16 @@ export default function SettingsPage() {
   const [location, setLocation] = useState(initialLocation);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [settings, setSettings] = useState(() => {
+    try {
+      return {
+        ...initialSettings,
+        ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"),
+      };
+    } catch {
+      return initialSettings;
+    }
+  });
 
   const load = async () => {
     try {
@@ -78,6 +99,12 @@ export default function SettingsPage() {
     }
   };
 
+  const saveSettings = (event) => {
+    event.preventDefault();
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    setMessage("Settings saved successfully");
+  };
+
   return (
     <div className="receipts-page">
       <div className="receipts-header">
@@ -102,6 +129,100 @@ export default function SettingsPage() {
           {message}
         </div>
       )}
+      <form className="receipt-form-card mb-5" onSubmit={saveSettings}>
+        <div className="receipt-items-header">
+          <h3>General & inventory settings</h3>
+          <button className="primary-btn" type="submit">
+            Save settings
+          </button>
+        </div>
+        <div className="receipt-form-grid">
+          <div className="field-group">
+            <label>Company name</label>
+            <input
+              value={settings.companyName}
+              onChange={(e) =>
+                setSettings({ ...settings, companyName: e.target.value })
+              }
+            />
+          </div>
+          <div className="field-group">
+            <label>Default warehouse</label>
+            <select
+              value={settings.defaultWarehouseId}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  defaultWarehouseId: e.target.value,
+                  defaultLocationId: "",
+                })
+              }
+            >
+              <option value="">No default</option>
+              {warehouses.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field-group">
+            <label>Default location</label>
+            <select
+              value={settings.defaultLocationId}
+              onChange={(e) =>
+                setSettings({ ...settings, defaultLocationId: e.target.value })
+              }
+            >
+              <option value="">No default</option>
+              {locations
+                .filter(
+                  (item) =>
+                    !settings.defaultWarehouseId ||
+                    item.warehouseId === settings.defaultWarehouseId,
+                )
+                .map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+          <div className="field-group">
+            <label>Low-stock threshold</label>
+            <input
+              type="number"
+              min="0"
+              value={settings.lowStockThreshold}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  lowStockThreshold: Number(e.target.value),
+                })
+              }
+            />
+          </div>
+        </div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {[
+            ["trackStock", "Track stock"],
+            ["allowNegativeStock", "Allow negative stock"],
+            ["autoUpdateStock", "Auto-update stock"],
+            ["lowStockAlert", "Low-stock alert"],
+          ].map(([key, label]) => (
+            <label key={key} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={settings[key]}
+                onChange={(e) =>
+                  setSettings({ ...settings, [key]: e.target.checked })
+                }
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      </form>
       <div className="grid gap-5 lg:grid-cols-2">
         <form className="receipt-form-card" onSubmit={submitWarehouse}>
           <h2 className="mb-4 text-lg font-bold">Add warehouse</h2>

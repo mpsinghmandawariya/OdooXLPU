@@ -8,7 +8,7 @@ class AppError extends Error {
   }
 }
 
-const createWarehouse = async ({ name, code, address }) => {
+const createWarehouse = async ({ name, code, address, location }) => {
   const normalizedCode = code.trim();
   const normalizedName = name.trim();
 
@@ -24,7 +24,10 @@ const createWarehouse = async ({ name, code, address }) => {
     data: {
       name: normalizedName,
       code: normalizedCode,
-      location: address && address.trim() ? address.trim() : null,
+      location:
+        (address ?? location) && (address ?? location).trim()
+          ? (address ?? location).trim()
+          : null,
     },
     include: {
       _count: {
@@ -140,10 +143,13 @@ const updateWarehouse = async (id, data) => {
     data: {
       ...(data.name !== undefined ? { name: data.name.trim() } : {}),
       ...(data.code !== undefined ? { code: data.code.trim() } : {}),
-      ...(data.address !== undefined
+      ...(data.address !== undefined || data.location !== undefined
         ? {
             location:
-              data.address && data.address.trim() ? data.address.trim() : null,
+              (data.address ?? data.location) &&
+              (data.address ?? data.location).trim()
+                ? (data.address ?? data.location).trim()
+                : null,
           }
         : {}),
       ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),

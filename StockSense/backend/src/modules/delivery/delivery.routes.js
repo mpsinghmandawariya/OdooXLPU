@@ -14,7 +14,9 @@ const createDeliverySchema = z.object({
   contact: z.string().trim().max(200).optional(),
   referenceNumber: z.string().trim().min(1).max(80).optional(),
   notes: z.string().trim().max(500).nullable().optional(),
-  scheduledDate: z.union([z.string().datetime({ offset: true }), z.string().date(), z.date()]).optional(),
+  scheduledDate: z
+    .union([z.string().datetime({ offset: true }), z.string().date(), z.date()])
+    .optional(),
   status: z.enum(["DRAFT", "COMPLETED"]).optional(),
 });
 
@@ -24,7 +26,11 @@ router.use(authenticate);
 router.get("/next-reference", deliveryController.getNextReference);
 router.get("/", deliveryController.getDeliveries);
 router.get("/:id", deliveryController.getDeliveryById);
-router.post("/", validationMiddleware(createDeliverySchema), deliveryController.createDelivery);
+router.post(
+  "/",
+  validationMiddleware(createDeliverySchema),
+  deliveryController.createDelivery,
+);
 router.post("/:id/ready", deliveryController.markDeliveryReady);
 router.post("/:id/validate", deliveryController.validateDelivery);
 router.post("/:id/cancel", deliveryController.cancelDelivery);

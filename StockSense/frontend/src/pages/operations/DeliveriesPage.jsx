@@ -3,8 +3,18 @@ import { useNavigate } from "react-router-dom";
 import "../operations/receipts.css";
 import { getDeliveries } from "../../services/delivery.service";
 
-const STATUS_MAP = { DRAFT: "draft", READY: "ready", DONE: "done", CANCELED: "canceled" };
-const STATUS_LABELS = { DRAFT: "Waiting", READY: "Ready", DONE: "Done", CANCELED: "Canceled" };
+const STATUS_MAP = {
+  DRAFT: "draft",
+  READY: "ready",
+  DONE: "done",
+  CANCELED: "canceled",
+};
+const STATUS_LABELS = {
+  DRAFT: "Waiting",
+  READY: "Ready",
+  DONE: "Done",
+  CANCELED: "Canceled",
+};
 
 function StatusBadge({ status }) {
   return (
@@ -17,7 +27,11 @@ function StatusBadge({ status }) {
 
 function formatDate(date) {
   if (!date) return "-";
-  return new Date(date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export default function DeliveriesPage() {
@@ -27,7 +41,12 @@ export default function DeliveriesPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("ALL");
   const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+  });
   const [error, setError] = useState("");
 
   const fetchDeliveries = async () => {
@@ -51,37 +70,75 @@ export default function DeliveriesPage() {
     }
   };
 
-  useEffect(() => { fetchDeliveries(); }, [page, status, search]);
+  useEffect(() => {
+    fetchDeliveries();
+  }, [page, status, search]);
 
   return (
     <div className="receipts-page">
       <div className="receipts-header">
         <div>
-          <div className="breadcrumb">Operations <span>/</span> Deliveries</div>
+          <div className="breadcrumb">
+            Operations <span>/</span> Deliveries
+          </div>
           <h1>Deliveries</h1>
           <p>Manage outgoing stock to customers and destinations.</p>
         </div>
-        <button className="new-receipt-btn" onClick={() => navigate("/operations/deliveries/new")}>
+        <button
+          className="new-receipt-btn"
+          onClick={() => navigate("/operations/deliveries/new")}
+        >
           <span>+</span> New Delivery
         </button>
       </div>
 
       <div className="receipt-toolbar">
         <div className="receipt-search">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
           </svg>
-          <input type="text" placeholder="Search reference or customer..." value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+          <input
+            type="text"
+            placeholder="Search reference or customer..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
         </div>
-        <select className="receipt-filter" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+        <select
+          className="receipt-filter"
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value);
+            setPage(1);
+          }}
+        >
           <option value="ALL">All statuses</option>
           <option value="WAITING">Waiting</option>
           <option value="READY">Ready</option>
           <option value="DONE">Done</option>
           <option value="CANCELED">Canceled</option>
         </select>
-        <button className="refresh-btn" onClick={fetchDeliveries} title="Refresh">↻</button>
+        <button
+          className="refresh-btn"
+          onClick={fetchDeliveries}
+          title="Refresh"
+        >
+          ↻
+        </button>
       </div>
 
       {error && <div className="receipt-error">{error}</div>}
@@ -105,7 +162,10 @@ export default function DeliveriesPage() {
             <div className="empty-icon">↑</div>
             <h3>No deliveries found</h3>
             <p>Try changing your search or create a new delivery.</p>
-            <button className="new-receipt-btn small" onClick={() => navigate("/operations/deliveries/new")}>
+            <button
+              className="new-receipt-btn small"
+              onClick={() => navigate("/operations/deliveries/new")}
+            >
               + New Delivery
             </button>
           </div>
@@ -125,24 +185,46 @@ export default function DeliveriesPage() {
               </thead>
               <tbody>
                 {deliveries.map((d) => (
-                  <tr key={d.id} onClick={() => navigate(`/operations/deliveries/${d.id}`)}>
+                  <tr
+                    key={d.id}
+                    onClick={() => navigate(`/operations/deliveries/${d.id}`)}
+                  >
                     <td>
-                      <button className="reference-link" onClick={(e) => { e.stopPropagation(); navigate(`/operations/deliveries/${d.id}`); }}>
+                      <button
+                        className="reference-link"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/operations/deliveries/${d.id}`);
+                        }}
+                      >
                         {d.referenceNumber}
                       </button>
                     </td>
                     <td>
                       <div className="contact-cell">
-                        <div className="contact-avatar">{(d.contact || "C").charAt(0).toUpperCase()}</div>
+                        <div className="contact-avatar">
+                          {(d.contact || "C").charAt(0).toUpperCase()}
+                        </div>
                         <span>{d.contact || "-"}</span>
                       </div>
                     </td>
-                    <td><span className="location-text">{d.from || "-"}</span></td>
-                    <td><span className="location-text">{d.to || "-"}</span></td>
-                    <td>{formatDate(d.scheduledDate)}</td>
-                    <td><StatusBadge status={d.status} /></td>
                     <td>
-                      <button className="row-menu" onClick={(e) => e.stopPropagation()}>⋮</button>
+                      <span className="location-text">{d.from || "-"}</span>
+                    </td>
+                    <td>
+                      <span className="location-text">{d.to || "-"}</span>
+                    </td>
+                    <td>{formatDate(d.scheduledDate)}</td>
+                    <td>
+                      <StatusBadge status={d.status} />
+                    </td>
+                    <td>
+                      <button
+                        className="row-menu"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        ⋮
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -153,11 +235,23 @@ export default function DeliveriesPage() {
 
         {deliveries.length > 0 && (
           <div className="receipt-pagination">
-            <span>Page {pagination.page} of {pagination.totalPages}</span>
+            <span>
+              Page {pagination.page} of {pagination.totalPages}
+            </span>
             <div className="pagination-buttons">
-              <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>←</button>
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                ←
+              </button>
               <button className="page-number">{page}</button>
-              <button disabled={page >= pagination.totalPages} onClick={() => setPage((p) => p + 1)}>→</button>
+              <button
+                disabled={page >= pagination.totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                →
+              </button>
             </div>
           </div>
         )}

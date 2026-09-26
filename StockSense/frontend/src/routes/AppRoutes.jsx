@@ -11,6 +11,7 @@ import MoveHistoryPage from "../pages/operations/MoveHistoryPage";
 import InventoryActionsPage from "../pages/operations/InventoryActionsPage";
 import StockPage from "../pages/operations/StockPage";
 import SettingsPage from "../pages/settings/SettingsPage";
+import ProductsPage from "../pages/products/ProductsPage";
 import ReceiptFormPage from "../pages/operations/ReceiptFormPage";
 import ReceiptsPage from "../pages/operations/ReceiptsPage";
 
@@ -144,6 +145,15 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <StockPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/products"
+        element={
+          <ProtectedRoute>
+            <ProductsPage />
           </ProtectedRoute>
         }
       />
