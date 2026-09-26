@@ -11,10 +11,10 @@ const getMoveHistory = async ({ search, productId, warehouseId, moveType, fromDa
     ...(search
       ? {
           OR: [
-            { reference: { contains: search, mode: "insensitive" } },
-            { contact: { contains: search, mode: "insensitive" } },
-            { product: { name: { contains: search, mode: "insensitive" } } },
-            { product: { sku: { contains: search, mode: "insensitive" } } },
+            { reference: { contains: search } },
+            { contact: { contains: search } },
+            { product: { name: { contains: search } } },
+            { product: { sku: { contains: search } } },
           ],
         }
       : {}),

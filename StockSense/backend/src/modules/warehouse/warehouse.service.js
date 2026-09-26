@@ -57,9 +57,9 @@ const getWarehouses = async ({
     ...(search
       ? {
           OR: [
-            { name: { contains: search, mode: "insensitive" } },
-            { code: { contains: search, mode: "insensitive" } },
-            { location: { contains: search, mode: "insensitive" } },
+            { name: { contains: search } },
+            { code: { contains: search } },
+            { location: { contains: search } },
           ],
         }
       : {}),

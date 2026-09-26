@@ -72,10 +72,10 @@ const getReceipts = async ({
     ...(search
       ? {
           OR: [
-            { referenceNumber: { contains: search, mode: "insensitive" } },
-            { contact: { contains: search, mode: "insensitive" } },
-            { product: { name: { contains: search, mode: "insensitive" } } },
-            { product: { sku: { contains: search, mode: "insensitive" } } },
+            { referenceNumber: { contains: search } },
+            { contact: { contains: search } },
+            { product: { name: { contains: search } } },
+            { product: { sku: { contains: search } } },
           ],
         }
       : {}),

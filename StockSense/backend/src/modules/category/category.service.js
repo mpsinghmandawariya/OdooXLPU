@@ -18,8 +18,8 @@ const getCategories = async (query = {}) => {
   if (query.search) {
     const search = query.search.trim();
     where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
+      { name: { contains: search } },
+      { description: { contains: search } },
     ];
   }
 

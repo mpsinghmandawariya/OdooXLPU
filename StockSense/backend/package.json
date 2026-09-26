@@ -5,8 +5,10 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
+    "predev": "prisma db push",
     "start": "node src/index.js",
-    "prisma:migrate": "prisma migrate dev",
+    "prestart": "prisma db push",
+    "prisma:migrate": "prisma db push",
     "prisma:studio": "prisma studio",
     "prisma:seed": "node prisma/seed.js",
     "test": "echo \"Error: no test specified\" && exit 1"
