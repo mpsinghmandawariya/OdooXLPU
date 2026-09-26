@@ -16,6 +16,7 @@ const receiptRoutes = require("./modules/receipt/receipt.routes");
 const deliveryRoutes = require("./modules/delivery/delivery.routes");
 const userRoutes = require("./modules/user/user.routes");
 const inventoryRoutes = require("./modules/inventory/inventory.routes");
+const reorderingRoutes = require("./modules/reordering/reordering.routes");
 const errorHandler = require("./middleware/error.middleware");
 
 const app = express();
@@ -129,6 +130,7 @@ app.use("/api/v1/receipts", receiptRoutes);
 app.use("/api/v1/deliveries", deliveryRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/operations", inventoryRoutes);
+app.use("/api/v1/reordering-rules", reorderingRoutes);
 app.use(errorHandler);
 
 module.exports = app;

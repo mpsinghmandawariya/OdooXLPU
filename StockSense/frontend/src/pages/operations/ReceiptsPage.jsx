@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./receipts.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
@@ -103,6 +104,12 @@ export default function ReceiptsPage() {
     <div className="receipts-page">
       <div className="receipts-header">
         <div>
+          <Link
+            to="/dashboard"
+            className="mb-2 inline-flex text-sm font-semibold text-gray-500 hover:text-[#E85D5D]"
+          >
+            ← Back to Dashboard
+          </Link>
           <div className="breadcrumb">
             Operations
             <span>/</span>

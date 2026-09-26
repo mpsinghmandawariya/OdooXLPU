@@ -86,6 +86,7 @@ model Product {
   stockBalances StockBalance[]
   operations    InventoryOperation[]
   stockMoves    StockMove[]
+  reorderingRules ReorderingRule[]
 
   @@index([name])
   @@index([sku])
@@ -108,6 +109,7 @@ model Warehouse {
 
   locations   Location[]
   operations  InventoryOperation[]
+  reorderingRules ReorderingRule[]
 
   @@index([name])
   @@map("warehouses")
@@ -132,6 +134,7 @@ model Location {
   stockBalances         StockBalance[]
   outgoingMoves         StockMove[]          @relation("MoveSource")
   incomingMoves         StockMove[]          @relation("MoveDestination")
+  reorderingRules       ReorderingRule[]
 
   @@unique([warehouseId, shortCode])
   @@index([warehouseId])
@@ -239,4 +242,27 @@ model InventoryOperation {
   @@index([warehouseId])
   @@index([locationId])
   @@map("inventory_operations")
+}
+
+model ReorderingRule {
+  id              String   @id @default(uuid())
+  productId       String
+  warehouseId     String?
+  locationId      String?
+  minimumQuantity Decimal  @db.Decimal(18, 3)
+  maximumQuantity Decimal  @db.Decimal(18, 3)
+  reorderQuantity Decimal  @db.Decimal(18, 3)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  location  Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([locationId])
+  @@index([isActive])
+  @@map("reordering_rules")
 }

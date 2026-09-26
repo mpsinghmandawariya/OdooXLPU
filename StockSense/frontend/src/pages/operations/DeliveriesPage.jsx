@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../operations/receipts.css";
 import { getDeliveries } from "../../services/delivery.service";
 
@@ -78,6 +78,12 @@ export default function DeliveriesPage() {
     <div className="receipts-page">
       <div className="receipts-header">
         <div>
+          <Link
+            to="/dashboard"
+            className="mb-2 inline-flex text-sm font-semibold text-gray-500 hover:text-[#E85D5D]"
+          >
+            ← Back to Dashboard
+          </Link>
           <div className="breadcrumb">
             Operations <span>/</span> Deliveries
           </div>

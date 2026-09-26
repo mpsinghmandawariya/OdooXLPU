@@ -14,6 +14,8 @@ import SettingsPage from "../pages/settings/SettingsPage";
 import ProductsPage from "../pages/products/ProductsPage";
 import ReceiptFormPage from "../pages/operations/ReceiptFormPage";
 import ReceiptsPage from "../pages/operations/ReceiptsPage";
+import ReorderingRulesPage from "../pages/reordering/ReorderingRulesPage";
+import ProfilePage from "../pages/profile/ProfilePage";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -181,6 +183,23 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/reordering-rules"
+        element={
+          <ProtectedRoute>
+            <ReorderingRulesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />

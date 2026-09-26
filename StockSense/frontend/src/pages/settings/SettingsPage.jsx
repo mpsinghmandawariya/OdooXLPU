@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 import api from "../../services/api";
 import "../operations/receipts.css";
@@ -109,6 +110,12 @@ export default function SettingsPage() {
     <div className="receipts-page">
       <div className="receipts-header">
         <div>
+          <Link
+            to="/dashboard"
+            className="mb-2 inline-flex text-sm font-semibold text-gray-500 hover:text-[#E85D5D]"
+          >
+            ← Back to Dashboard
+          </Link>
           <div className="breadcrumb">
             Settings <span>/</span> Warehouse & Location
           </div>

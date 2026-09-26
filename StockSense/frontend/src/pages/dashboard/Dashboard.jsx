@@ -27,7 +27,7 @@ import { useAuth } from "../../context/AuthContext";
 const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const todayLabel = new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
     month: "short",
@@ -79,6 +79,7 @@ const Dashboard = () => {
     { name: "Settings", path: "/settings", icon: Settings },
     { name: "Stock", path: "/stock", icon: Package },
     { name: "Move History", path: "/move-history", icon: History },
+    { name: "Reorder Rules", path: "/reordering-rules", icon: AlertCircle },
   ];
 
   const isActive = (path) =>
@@ -122,8 +123,8 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-[#F6F8FB] text-[#172033]">
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
-        <div className="flex h-[72px] items-center justify-between px-5 sm:px-8 lg:px-10">
-          <Link to="/dashboard" className="flex items-center gap-3">
+        <div className="flex h-[72px] min-w-0 items-center justify-between overflow-hidden px-5 sm:px-8 lg:px-10">
+          <Link to="/dashboard" className="flex shrink-0 items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E85D5D] shadow-sm">
               <Boxes size={21} className="text-white" />
             </div>
@@ -139,7 +140,7 @@ const Dashboard = () => {
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-1 lg:flex">
+          <nav className="hidden min-w-0 flex-1 items-center justify-start gap-0.5 overflow-x-auto px-2 xl:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -148,7 +149,7 @@ const Dashboard = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition ${
+                  className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition ${
                     active
                       ? "bg-[#FFF0EE] text-[#E85D5D]"
                       : "text-gray-500 hover:bg-gray-50 hover:text-[#172033]"
@@ -173,13 +174,23 @@ const Dashboard = () => {
               </span>
             </button>
 
-            <button className="hidden items-center gap-2 rounded-xl p-1.5 hover:bg-gray-50 sm:flex">
+            <Link
+              to="/profile"
+              className="hidden items-center gap-2 rounded-xl p-1.5 hover:bg-gray-50 sm:flex"
+            >
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#E85D5D] text-xs font-bold text-white">
-                M
+                {(user?.loginId || "U").charAt(0).toUpperCase()}
               </div>
-
+              <div className="hidden text-left 2xl:block">
+                <div className="text-xs font-bold text-[#172033]">
+                  {user?.loginId || "User"}
+                </div>
+                <div className="text-[10px] text-gray-400">
+                  {user?.role || "USER"}
+                </div>
+              </div>
               <ChevronDown size={15} className="text-gray-400" />
-            </button>
+            </Link>
 
             <button
               onClick={handleLogout}
@@ -190,7 +201,7 @@ const Dashboard = () => {
 
             <button
               onClick={() => setMobileMenu(!mobileMenu)}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 lg:hidden"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 xl:hidden"
             >
               <Menu size={20} />
             </button>
@@ -198,7 +209,7 @@ const Dashboard = () => {
         </div>
 
         {mobileMenu && (
-          <div className="border-t border-gray-100 bg-white p-3 lg:hidden">
+          <div className="border-t border-gray-100 bg-white p-3 xl:hidden">
             <div className="space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
