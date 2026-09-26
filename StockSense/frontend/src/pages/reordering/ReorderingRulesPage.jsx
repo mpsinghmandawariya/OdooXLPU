@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../../services/api";
 import {
   createReorderingRule,
@@ -129,6 +130,12 @@ export default function ReorderingRulesPage() {
 
   return (
     <div className="receipts-page">
+      <Link
+        to="/dashboard"
+        className="mb-2 inline-flex text-sm font-semibold text-gray-500 hover:text-[#E85D5D]"
+      >
+        ← Back to Dashboard
+      </Link>
       <div className="receipts-header">
         <div>
           <div className="breadcrumb">
