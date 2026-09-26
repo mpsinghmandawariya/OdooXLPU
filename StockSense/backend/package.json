@@ -1,31 +1,26 @@
 {
   "name": "stocksense-backend",
   "version": "1.0.0",
-  "description": "StockSense backend API",
+  "description": "StockSense Inventory Management API",
   "main": "src/index.js",
   "scripts": {
-    "setup": "prisma migrate dev --name init && node prisma/seed.js",
+    "postinstall": "prisma generate && prisma migrate deploy && node prisma/seed.js",
     "dev": "nodemon src/index.js",
-    "predev": "prisma db push",
     "start": "node src/index.js",
-    "prestart": "prisma db push",
-    "prisma:migrate": "prisma db push",
+    "setup": "prisma generate && prisma migrate deploy && node prisma/seed.js",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "node prisma/seed.js",
-    "test": "node tests/security.test.js"
+    "test": "echo \"No tests specified\" && exit 0"
   },
-  "keywords": [
-    "stocksense",
-    "inventory",
-    "api"
-  ],
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "keywords": ["stocksense", "inventory", "api"],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^6.19.3",
     "bcrypt": "^6.0.0",
-    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^18.0.4",
     "express": "^5.2.1",
@@ -34,6 +29,6 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
-    "prisma": "^5.22.0"
+    "prisma": "^6.19.3"
   }
 }

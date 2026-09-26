@@ -121,15 +121,18 @@ export default function ReceiptFormPage() {
         setWarehouses(whs);
         setLocationsByWarehouse(groupedLocations);
 
-        if (!isEdit && !selectedWarehouseId) {
-          const warehouseWithLocation = whs.find(
-            (warehouse) => groupedLocations[warehouse.id]?.length,
-          );
-          setSelectedWarehouseId(warehouseWithLocation?.id || whs[0]?.id || "");
+        if (!isEdit) {
+          setSelectedWarehouseId((prev) => {
+            if (prev) return prev;
+            const warehouseWithLocation = whs.find(
+              (warehouse) => groupedLocations[warehouse.id]?.length,
+            );
+            return warehouseWithLocation?.id || whs[0]?.id || "";
+          });
         }
       })
       .catch((requestError) => setError(requestError.message));
-  }, [isEdit, selectedWarehouseId]);
+  }, [isEdit]);
 
   // ── load locations when warehouse changes ─────────────
   useEffect(() => {
