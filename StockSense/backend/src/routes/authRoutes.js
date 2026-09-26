@@ -15,29 +15,15 @@ const {
   resetPasswordSchema,
 } = require("../validators/authValidator");
 const { authenticate } = require("../middleware/auth.middleware");
+const validationMiddleware = require("../middleware/validation.middleware");
 
 const router = express.Router();
 
-const validate = (schema) => (req, res, next) => {
-  const result = schema.safeParse(req.body);
-
-  if (!result.success) {
-    const firstIssue = result.error.issues[0];
-    return res.status(400).json({
-      success: false,
-      message: firstIssue.message,
-    });
-  }
-
-  req.validatedBody = result.data;
-  next();
-};
-
-router.post("/signup", validate(signupSchema), signup);
-router.post("/login", validate(loginSchema), login);
-router.post("/forgot-password", validate(forgotPasswordSchema), forgotPassword);
-router.post("/verify-otp", validate(verifyOtpSchema), verifyOtp);
-router.post("/reset-password", validate(resetPasswordSchema), resetPassword);
+router.post("/signup", validationMiddleware(signupSchema), signup);
+router.post("/login", validationMiddleware(loginSchema), login);
+router.post("/forgot-password", validationMiddleware(forgotPasswordSchema), forgotPassword);
+router.post("/verify-otp", validationMiddleware(verifyOtpSchema), verifyOtp);
+router.post("/reset-password", validationMiddleware(resetPasswordSchema), resetPassword);
 router.get("/me", authenticate, getMe);
 
 module.exports = router;

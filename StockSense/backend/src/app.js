@@ -3,7 +3,6 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
-const env = require("./config/env");
 const authRoutes = require("./routes/authRoutes");
 const dashboardRoutes = require("./modules/dashboard/dashboard.routes");
 const productRoutes = require("./modules/products/product.routes");
@@ -61,7 +60,7 @@ app.get("/api/v1/csrf-token", (req, res) => {
   res.cookie("csrfToken", csrfToken, {
     httpOnly: true,
     sameSite: "lax",
-    secure: false,
+    secure: process.env.NODE_ENV === "production",
   });
 
   res.status(200).json({

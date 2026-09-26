@@ -1,4 +1,5 @@
 const prisma = require("../../config/database");
+const { AppError } = require("../../utils/errors");
 
 // ======================================================
 // GET STOCK LIST
@@ -185,11 +186,7 @@ const getProductStock = async (productId) => {
     },
   });
 
-  if (!product) {
-    const error = new Error("Product not found");
-    error.statusCode = 404;
-    throw error;
-  }
+  if (!product) throw new AppError("Product not found", 404);
 
   const balances = await prisma.stockBalance.findMany({
     where: {
@@ -269,11 +266,7 @@ const getLocationStock = async (locationId) => {
     },
   });
 
-  if (!location) {
-    const error = new Error("Location not found");
-    error.statusCode = 404;
-    throw error;
-  }
+  if (!location) throw new AppError("Location not found", 404);
 
   const stock = await prisma.stockBalance.findMany({
     where: {

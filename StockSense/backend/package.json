@@ -4,12 +4,13 @@
   "description": "StockSense backend API",
   "main": "src/index.js",
   "scripts": {
+    "setup": "prisma migrate dev --name init && node prisma/seed.js",
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "node prisma/seed.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/security.test.js"
   },
   "keywords": [
     "stocksense",

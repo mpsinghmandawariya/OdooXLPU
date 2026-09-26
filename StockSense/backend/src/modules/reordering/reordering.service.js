@@ -1,10 +1,5 @@
 const prisma = require("../../config/database");
-
-const AppError = (message, statusCode = 400) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
-};
+const { AppError } = require("../../utils/errors");
 
 const getStockForRule = async (rule) => {
   const where = { productId: rule.productId };
@@ -47,22 +42,22 @@ const formatRule = async (rule) => {
 
 const validateScope = async ({ productId, warehouseId, locationId }) => {
   const product = await prisma.product.findUnique({ where: { id: productId } });
-  if (!product) throw AppError("Product not found", 404);
+  if (!product) throw new AppError("Product not found", 404);
 
   if (warehouseId) {
     const warehouse = await prisma.warehouse.findUnique({
       where: { id: warehouseId },
     });
-    if (!warehouse) throw AppError("Warehouse not found", 404);
+    if (!warehouse) throw new AppError("Warehouse not found", 404);
   }
 
   if (locationId) {
     const location = await prisma.location.findUnique({
       where: { id: locationId },
     });
-    if (!location) throw AppError("Location not found", 404);
+    if (!location) throw new AppError("Location not found", 404);
     if (warehouseId && location.warehouseId !== warehouseId) {
-      throw AppError("Location does not belong to the selected warehouse", 400);
+      throw new AppError("Location does not belong to the selected warehouse", 400);
     }
   }
 };
@@ -99,7 +94,7 @@ const getRuleById = async (id) => {
     where: { id },
     include: { product: true, warehouse: true, location: true },
   });
-  if (!rule) throw AppError("Reordering rule not found", 404);
+  if (!rule) throw new AppError("Reordering rule not found", 404);
   return formatRule(rule);
 };
 
@@ -114,7 +109,7 @@ const createRule = async (payload) => {
     },
   });
   if (existing)
-    throw AppError(
+    throw new AppError(
       "An active reordering rule already exists for this scope",
       409,
     );
@@ -131,7 +126,7 @@ const createRule = async (payload) => {
 
 const updateRule = async (id, payload) => {
   const existing = await prisma.reorderingRule.findUnique({ where: { id } });
-  if (!existing) throw AppError("Reordering rule not found", 404);
+  if (!existing) throw new AppError("Reordering rule not found", 404);
   await validateScope({
     productId: payload.productId || existing.productId,
     warehouseId:
@@ -158,7 +153,7 @@ const deactivateRule = async (id) => {
       data: { isActive: false },
     });
   } catch {
-    throw AppError("Reordering rule not found", 404);
+    throw new AppError("Reordering rule not found", 404);
   }
 };
 

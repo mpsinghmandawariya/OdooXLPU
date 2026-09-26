@@ -1,13 +1,6 @@
-const { Prisma } = require("@prisma/client");
-
 const prisma = require("../../config/database");
 const { generateReference } = require("../../utils/referenceGenerator");
-const {
-  decrementStock,
-  incrementStock,
-  recordMove,
-  AppError,
-} = require("../../utils/stockEngine");
+const { decrementStock, incrementStock, recordMove, AppError } = require("../../utils/stockEngine");
 
 const INCLUDE = {
   product: { select: { id: true, name: true, sku: true, unitOfMeasure: true } },
@@ -45,10 +38,7 @@ const createTransfer = async ({
   userId,
 }) => {
   if (sourceLocationId === destinationLocationId) {
-    throw new AppError(
-      "Source and destination locations must be different",
-      400,
-    );
+    throw new AppError("Source and destination locations must be different", 400);
   }
 
   const amount = Number(quantity);
@@ -62,12 +52,9 @@ const createTransfer = async ({
     prisma.location.findUnique({ where: { id: destinationLocationId } }),
   ]);
 
-  if (!product || !product.isActive)
-    throw new AppError("Product not found", 404);
-  if (!source || !source.isActive)
-    throw new AppError("Source location not found", 404);
-  if (!destination || !destination.isActive)
-    throw new AppError("Destination location not found", 404);
+  if (!product || !product.isActive) throw new AppError("Product not found", 404);
+  if (!source || !source.isActive) throw new AppError("Source location not found", 404);
+  if (!destination || !destination.isActive) throw new AppError("Destination location not found", 404);
 
   return prisma.$transaction(async (tx) => {
     const referenceNumber = await generateReference("TRANSFER", tx);
@@ -82,7 +69,7 @@ const createTransfer = async ({
         locationId: sourceLocationId,
         sourceLocationId,
         destinationLocationId,
-        quantity: new Prisma.Decimal(amount),
+        quantity: amount,
         scheduledDate: scheduledDate ? new Date(scheduledDate) : new Date(),
         notes: notes?.trim() || null,
         createdById: userId,
@@ -92,13 +79,7 @@ const createTransfer = async ({
   });
 };
 
-const createAdjustment = async ({
-  productId,
-  locationId,
-  quantity,
-  notes,
-  userId,
-}) => {
+const createAdjustment = async ({ productId, locationId, quantity, notes, userId }) => {
   const countedQuantity = Number(quantity);
   if (!Number.isFinite(countedQuantity) || countedQuantity < 0) {
     throw new AppError("Counted quantity must be zero or greater", 400);
@@ -109,10 +90,8 @@ const createAdjustment = async ({
     prisma.location.findUnique({ where: { id: locationId } }),
   ]);
 
-  if (!product || !product.isActive)
-    throw new AppError("Product not found", 404);
-  if (!location || !location.isActive)
-    throw new AppError("Location not found", 404);
+  if (!product || !product.isActive) throw new AppError("Product not found", 404);
+  if (!location || !location.isActive) throw new AppError("Location not found", 404);
 
   return prisma.$transaction(async (tx) => {
     const referenceNumber = await generateReference("ADJUSTMENT", tx);
@@ -124,7 +103,7 @@ const createAdjustment = async ({
         productId,
         warehouseId: location.warehouseId,
         locationId,
-        quantity: new Prisma.Decimal(countedQuantity),
+        quantity: countedQuantity,
         notes: notes?.trim() || null,
         createdById: userId,
       },
@@ -234,17 +213,17 @@ const validateAdjustment = async (id, userId) =>
       create: {
         productId: operation.productId,
         locationId: operation.locationId,
-        quantity: new Prisma.Decimal(countedQuantity),
-        reservedQuantity: new Prisma.Decimal(0),
+        quantity: countedQuantity,
+        reservedQuantity: 0,
       },
-      update: { quantity: new Prisma.Decimal(countedQuantity) },
+      update: { quantity: countedQuantity },
     });
 
     if (difference !== 0) {
       await recordMove(tx, {
         reference: operation.referenceNumber,
         productId: operation.productId,
-        quantity: new Prisma.Decimal(difference),
+        quantity: difference,
         moveType: "ADJUSTMENT",
         sourceLocationId: operation.locationId,
         operationId: operation.id,

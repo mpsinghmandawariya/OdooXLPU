@@ -1,12 +1,5 @@
 const prisma = require("../../config/database");
-
-class AppError extends Error {
-  constructor(message, statusCode = 400) {
-    super(message);
-    this.name = "AppError";
-    this.statusCode = statusCode;
-  }
-}
+const { AppError } = require("../../utils/errors");
 
 const createWarehouse = async ({ name, code, address, location }) => {
   const normalizedCode = code.trim();

@@ -1,12 +1,4 @@
-const { Prisma } = require("@prisma/client");
-
-class AppError extends Error {
-  constructor(message, statusCode = 400) {
-    super(message);
-    this.name = "AppError";
-    this.statusCode = statusCode;
-  }
-}
+const { AppError } = require("./errors");
 
 /**
  * Increment stock at a location (used by receipts).
@@ -15,12 +7,12 @@ class AppError extends Error {
 const incrementStock = async (tx, { productId, locationId, quantity }) => {
   return tx.stockBalance.upsert({
     where: { productId_locationId: { productId, locationId } },
-    update: { quantity: { increment: new Prisma.Decimal(quantity) } },
+    update: { quantity: { increment: Number(quantity) } },
     create: {
       productId,
       locationId,
-      quantity: new Prisma.Decimal(quantity),
-      reservedQuantity: new Prisma.Decimal(0),
+      quantity: Number(quantity),
+      reservedQuantity: 0,
     },
   });
 };
@@ -39,7 +31,7 @@ const decrementStock = async (tx, { productId, locationId, quantity }) => {
   const reserved = balance ? Number(balance.reservedQuantity) : 0;
   const available = onHand - reserved;
 
-  if (available < quantity) {
+  if (available < Number(quantity)) {
     throw new AppError(
       `Insufficient stock. Available: ${available}, Requested: ${quantity}`,
       400,
@@ -48,7 +40,7 @@ const decrementStock = async (tx, { productId, locationId, quantity }) => {
 
   return tx.stockBalance.update({
     where: { productId_locationId: { productId, locationId } },
-    data: { quantity: { decrement: new Prisma.Decimal(quantity) } },
+    data: { quantity: { decrement: Number(quantity) } },
   });
 };
 
@@ -76,7 +68,7 @@ const recordMove = async (
     data: {
       reference,
       productId,
-      quantity: new Prisma.Decimal(quantity),
+      quantity: Number(quantity),
       moveType,
       sourceLocationId,
       destinationLocationId,

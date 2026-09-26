@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const prisma = require("../../config/database");
+const { AppError } = require("../../utils/errors");
 
 const getProfile = async (userId) => {
   const user = await prisma.user.findUnique({
@@ -13,11 +14,7 @@ const getProfile = async (userId) => {
     },
   });
 
-  if (!user) {
-    const error = new Error("User not found");
-    error.statusCode = 404;
-    throw error;
-  }
+  if (!user) throw new AppError("User not found", 404);
 
   return user;
 };
@@ -42,19 +39,11 @@ const changePassword = async (userId, currentPassword, newPassword) => {
     where: { id: userId },
   });
 
-  if (!user) {
-    const error = new Error("User not found");
-    error.statusCode = 404;
-    throw error;
-  }
+  if (!user) throw new AppError("User not found", 404);
 
   const valid = await bcrypt.compare(currentPassword, user.passwordHash);
 
-  if (!valid) {
-    const error = new Error("Current password is incorrect");
-    error.statusCode = 400;
-    throw error;
-  }
+  if (!valid) throw new AppError("Current password is incorrect", 400);
 
   const passwordHash = await bcrypt.hash(newPassword, 12);
 
