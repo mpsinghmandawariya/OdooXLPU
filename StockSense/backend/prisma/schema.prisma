@@ -249,9 +249,9 @@ model ReorderingRule {
   productId       String
   warehouseId     String?
   locationId      String?
-  minimumQuantity Decimal  @db.Decimal(18, 3)
-  maximumQuantity Decimal  @db.Decimal(18, 3)
-  reorderQuantity Decimal  @db.Decimal(18, 3)
+  minimumQuantity Decimal
+  maximumQuantity Decimal
+  reorderQuantity Decimal
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
